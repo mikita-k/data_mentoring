@@ -5,13 +5,17 @@ from hw_spark_basic_homework.src.main.utils.spark import get_spark
 """ init spark """
 spark = get_spark()
 
+""" load weather """
 weather_df = get_weather(spark)
 print(f"weather cnt {weather_df.count()}")
+weather_df.show()
 
+""" load hotels """
 hotels_df = get_hotels(spark)
-print(f"hotel cnt {hotels_df.count()}")
+print(f"hotels cnt {hotels_df.count()}")
+hotels_df.show()
 
-# TODO nex part failed due to SocketTimeoutException
-join_df = weather_df.join(hotels_df, weather_df.Geohash == hotels_df.Geohash, "left")
-join_df.show(truncate=False)
-print(join_df.count())
+""" join weather and hotels """
+join_df = hotels_df.join(weather_df, hotels_df.geohash == weather_df.geohash, "left")
+print(f"join cnt {join_df.count()}")
+join_df.show(25)
