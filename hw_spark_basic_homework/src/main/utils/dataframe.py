@@ -12,7 +12,7 @@ get_geohash_udf = udf(lambda x, y: geo.get_geohash(x, y))
 
 def get_weather_df(spark):
     get_local_data = spark.conf.get("get_local_data")
-    if get_local_data:
+    if get_local_data == "True":
         weather_df = spark.read.option("delimiter", ';').option("header", True).csv("sandbox/weather.csv")
     else:
         path = properties.get_path_weather()
@@ -23,7 +23,7 @@ def get_weather_df(spark):
 
 def get_hotels_df(spark):
     get_local_data = spark.conf.get("get_local_data")
-    if get_local_data:
+    if get_local_data == "True":
         hotels_df = spark.read.option("delimiter", ';').option("header", True).csv("sandbox/hotels.csv")
     else:
         path = properties.get_path_hotels()
