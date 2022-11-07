@@ -2,8 +2,11 @@ from hw_spark_basic_homework.src.main.read_hotels import get_hotels
 from hw_spark_basic_homework.src.main.read_weather import get_weather
 from hw_spark_basic_homework.src.main.utils.spark import get_spark
 
+""" switch between local and remote data """
+get_local_data = False
+
 """ init spark """
-spark = get_spark()
+spark = get_spark(get_local_data)
 
 """ load weather """
 weather_df = get_weather(spark)

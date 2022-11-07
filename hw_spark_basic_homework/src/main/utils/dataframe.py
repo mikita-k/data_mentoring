@@ -2,9 +2,6 @@ from pyspark.sql.functions import lit, udf, when
 
 from hw_spark_basic_homework.src.main.utils import properties, geo
 
-""" NB! Use get_local_data value for switching between local and remote data """
-get_local_data = True
-
 geohash_col = "geohash"
 
 """ init UDFs """
@@ -14,6 +11,7 @@ get_geohash_udf = udf(lambda x, y: geo.get_geohash(x, y))
 
 
 def get_weather_df(spark):
+    get_local_data = spark.conf.get("get_local_data")
     if get_local_data:
         weather_df = spark.read.option("delimiter", ';').option("header", True).csv("sandbox/weather.csv")
     else:
@@ -24,6 +22,7 @@ def get_weather_df(spark):
 
 
 def get_hotels_df(spark):
+    get_local_data = spark.conf.get("get_local_data")
     if get_local_data:
         hotels_df = spark.read.option("delimiter", ';').option("header", True).csv("sandbox/hotels.csv")
     else:
