@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.idea
+
+hw_spark_basic_homework/DATASETS/
+hw_spark_basic_homework/properties/
+hw_spark_basic_homework/src/main/sandbox/
+hw_spark_basic_homework/src/main/output/result
