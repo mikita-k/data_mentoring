@@ -56,21 +56,20 @@ hotel_weather_df.write.mode("overwrite").saveAsTable(r_hotel_weather)
 
 # COMMAND ----------
 
-top_10_hotels_with_max_abs_tmpr_diff = f"""
-SELECT id, name, year, month,
-max(avg_tmpr_c) - min(avg_tmpr_c) as tmpr_diff_c
-FROM {r_hotel_weather}
-GROUP BY id, name, year, month
-ORDER BY tmpr_diff_c DESC
-LIMIT 10
-"""
-top_10_hotels_with_max_abs_tmpr_diff_df = spark.sql(top_10_hotels_with_max_abs_tmpr_diff)
-display(top_10_hotels_with_max_abs_tmpr_diff_df)
+# calculate top 10 hotels with max abs temperature separated by month
+from pyspark.sql.functions import *
 
-assert top_10_hotels_with_max_abs_tmpr_diff_df.count() == 10
+# load data from db
+hotel_weather_df = spark.sql("SELECT * FROM r_hotel_weather") \
+    .select("address", "name", "avg_tmpr_c", "wthr_date", "year", "month") \
+    .orderBy("name", "address", "wthr_date")
 
-
-# NB! N Main ST grouped HELP!
+# calculate average temperature for all hotels group by month
+average_tmpr_df = hotel_weather_df.groupBy(hotel_weather_df.name, hotel_weather_df.address, "year", "month") \
+    .agg(avg("avg_tmpr_c").alias("visit_avg_tmpr")) \
+    .select(col("name").alias("address"), col("address").alias("name"), "year", "month", "visit_avg_tmpr") \
+    .orderBy("name", "address")
+display(average_tmpr_df)
 
 # COMMAND ----------
 
@@ -109,64 +108,6 @@ LIMIT 10
 
 top_10_busy_hotels_df = spark.sql(top_10_busy_hotels_query)
 display(top_10_busy_hotels_df)
-
-
-# COMMAND ----------
-
-# TESTING CODE TOP 10 EVER
-if False:
-    # create table
-    test_create_table_query = "CREATE TABLE IF NOT EXISTS tmp_visits (address STRING, visits_cnt INT, check_in DATE, check_out DATE)"
-    spark.sql(test_create_table_query)
-
-    assert spark.table("tmp_visits"), "Table 'tmp_visit' does not exists"
-
-    # insert data
-    df = spark.sql("select * from tmp_visits order by address, check_in, check_out")
-    if df.count() == 0:
-        spark.sql("insert into tmp_visits (address, visits_cnt, check_in, check_out) values('a', 1, '2001-10-01', '2001-11-01')")
-        spark.sql("insert into tmp_visits (address, visits_cnt, check_in, check_out) values('b', 2, '2001-10-01', '2001-12-01')")
-        spark.sql("insert into tmp_visits (address, visits_cnt, check_in, check_out) values('a', 3, '2001-12-01', '2001-12-01')")
-        spark.sql("insert into tmp_visits (address, visits_cnt, check_in, check_out) values('b', 2, '2001-12-01', '2001-12-01')")
-        spark.sql("insert into tmp_visits (address, visits_cnt, check_in, check_out) values('a', 1, '2001-10-01', '2001-12-01')") 
-
-    assert spark.table("tmp_visits").count() == 5, "Make sure that table 'tmp_visits' contains 5 records"
-
-    # display table
-    # display(spark.sql("select * from tmp_visits order by address, check_in, check_out"))
-
-    # calculate
-    test_calc_query = """
-    WITH r_visit_date as
-    (SELECT check_in as visit_date FROM tmp_visits
-    GROUP BY check_in
-    UNION
-    SELECT check_out as visit_date FROM tmp_visits
-    GROUP BY check_out
-
-    ORDER BY visit_date
-    )
-
-    SELECT address, visit_date, sum(visits_cnt) as total_visits FROM r_visit_date rvd
-    LEFT JOIN tmp_visits rv ON (rv.check_in <= rvd.visit_date AND rv.check_out >= rvd.visit_date)
-    GROUP BY address, visit_date
-    ORDER BY address, visit_date
-    """
-
-    result_df = spark.sql(test_calc_query)
-    display(result_df)
-
-    # assert result_df
-    # a | 2001-10 | 2
-    # a | 2001-11 | 2
-    # a | 2001-12 | 4
-    # b | 2001-10 | 2
-    # b | 2001-11 | 2
-    # b | 2001-12 | 4
-
-
-    # drop table
-    spark.sql("drop table tmp_visits")
 
 
 # COMMAND ----------
@@ -211,114 +152,6 @@ ORDER BY row_nr
 
 top_10_busy_hotels_ever_df = spark.sql(top_10_busy_hotels_ever_query)
 display(top_10_busy_hotels_ever_df)
-
-
-# COMMAND ----------
-
-# TESTING CODE (top 10 Hotels every month)
-if False:
-    
-#     spark.sql("drop table tmp_expedia")
-    # create table
-    create_tmp_expedia_table = "CREATE TABLE IF NOT EXISTS tmp_expedia (hotel_id INT, srch_adults_cnt INT, srch_children_cnt INT, srch_ci DATE, srch_co DATE)"
-    spark.sql(create_tmp_expedia_table)
-    assert spark.table("tmp_expedia"), "Table 'tmp_expedia' does not exists"
-
-    create_tmp_hotel_weather_table = "CREATE TABLE IF NOT EXISTS tmp_hotel_weather (id INT, name STRING, address STRING)"
-    spark.sql(create_tmp_hotel_weather_table)
-    assert spark.table("tmp_hotel_weather"), "Table 'tmp_hotel_weather' does not exists"
-    
-    # insert data
-    if spark.sql("select * from tmp_expedia").count() == 0:
-        str_insert = "INSERT INTO tmp_expedia (hotel_id, srch_adults_cnt, srch_children_cnt, srch_ci, srch_co) values({}, {}, {}, {}, {})"
-        spark.sql(str_insert.format(1001, 1, 0, "'2001-10-15'", "'2001-10-29'"))
-        spark.sql(str_insert.format(1001, 2, 0, "'2001-10-28'", "'2001-12-01'"))
-        spark.sql(str_insert.format(1001, 2, 0, "'2001-10-01'", "'2001-11-01'"))
-        spark.sql(str_insert.format(1001, 4, 0, "'2001-11-01'", "'2001-12-01'"))
-        spark.sql(str_insert.format(1001, 3, 2, "'2001-12-01'", "'2001-12-01'"))
-
-        spark.sql(str_insert.format(2012, 1, 0, "'2001-10-01'", "'2001-10-01'"))
-        spark.sql(str_insert.format(2012, 2, 1, "'2001-10-01'", "'2001-12-01'"))
-        spark.sql(str_insert.format(2012, 2, 0, "'2001-10-01'", "'2001-11-01'"))
-        spark.sql(str_insert.format(2012, 2, 2, "'2001-11-01'", "'2001-12-01'"))
-        spark.sql(str_insert.format(2012, 2, 1, "'2001-12-01'", "'2001-12-01'"))
-
-        spark.sql(str_insert.format(546, 1, 0, "'2001-10-01'", "'2001-10-01'"))
-        spark.sql(str_insert.format(546, 1, 2, "'2001-10-01'", "'2001-12-01'"))
-        spark.sql(str_insert.format(546, 3, 0, "'2001-10-01'", "'2001-11-01'"))
-        spark.sql(str_insert.format(546, 3, 1, "'2001-11-01'", "'2001-12-01'"))
-        spark.sql(str_insert.format(546, 1, 1, "'2001-12-01'", "'2001-12-01'"))
-
-    assert spark.table("tmp_expedia").count() == 15, "Make sure that table 'tmp_expedia' contains 15 records"
-        
-    if spark.sql("select * from tmp_hotel_weather").count() == 0:
-        spark.sql("INSERT INTO tmp_hotel_weather (id, name, address) values(546, 'San Diego 201/11','Hillton')")
-        spark.sql("INSERT INTO tmp_hotel_weather (id, name, address) values(2012, 'Lomansh Crown 11G-a','StarWars')")
-        spark.sql("INSERT INTO tmp_hotel_weather (id, name, address) values(1001, 'Limpopo Island, 99-BBa','Silver Cup')")
-
-    assert spark.table("tmp_hotel_weather").count() == 3, "Make sure that table 'tmp_visits' contains 3 records"
-
-#         2001-10 | Hotel_a | 5
-#         2001-11 | Hotel_a | 8
-#         2001-12 | Hotel_a | 11
-
-#         2001-10 | Hotel_b | 6
-#         2001-11 | Hotel_b | 9
-#         2001-12 | Hotel_b | 10
-
-#         2001-10 | Hotel_c | 7
-#         2001-11 | Hotel_c | 10
-#         2001-12 | Hotel_c | 9
-    
-
-    tmp_expedia = "tmp_expedia"
-    tmp_hotel_weather = "tmp_hotel_weather"
-    top_cnt = 2
-
-    test_calc_query = f"""
-    WITH r_visits AS
-    (SELECT rhw.name, rhw.address, srch_adults_cnt + srch_children_cnt AS visits_cnt,
-    DATE_TRUNC('month', srch_ci) AS checkin,
-    DATE_TRUNC('month', srch_co) AS checkout
-    FROM {tmp_expedia} re
-    LEFT JOIN (SELECT id, name, address FROM {tmp_hotel_weather} GROUP BY id, name, address) rhw ON (rhw.id = re.hotel_id)
-
-    WHERE name IS NOT NULL
-
-    ), r_visit_date AS
-    (SELECT checkin as visit_date FROM r_visits
-    GROUP BY visit_date
-    UNION
-    SELECT checkout as visit_date FROM r_visits
-    GROUP BY visit_date
-
-    ), r_grouped_visits AS
-    (SELECT ROW_NUMBER() OVER(ORDER BY visit_date, sum(visits_cnt) DESC) AS row_nr, address, visit_date, sum(visits_cnt) as total_visits FROM r_visit_date rvd
-    LEFT JOIN r_visits rv ON (rv.checkin <= rvd.visit_date AND rv.checkout >= rvd.visit_date)
-    GROUP BY address, visit_date
-    ORDER BY address, visit_date)
-
-    SELECT rgv.address, rgv.visit_date, rgv.total_visits
-    FROM r_grouped_visits rgv
-    LEFT JOIN (SELECT visit_date, MIN(row_nr) as min_row_nr FROM r_grouped_visits GROUP BY visit_date) rgv_filter
-    ON (rgv.visit_date = rgv_filter.visit_date AND rgv.row_nr < (rgv_filter.min_row_nr + {top_cnt}))
-    
-    WHERE rgv_filter.min_row_nr IS NOT NULL
-
-    ORDER BY row_nr
-
-
-    """
-
-
-    result_df = spark.sql(test_calc_query)
-    display(result_df)
-
-
-
-
-    # drop table
-#     spark.sql("drop table tmp_visits")
 
 
 # COMMAND ----------
