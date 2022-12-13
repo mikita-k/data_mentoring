@@ -22,8 +22,8 @@
 # COMMAND ----------
 
 # These commands are only required if you are using a cluster running DBR 7.3 LTS ML or below. 
-import cloudpickle
-assert cloudpickle.__version__ >= "1.4.0", "Update the cloudpickle library using `%pip install --upgrade cloudpickle`"
+# import cloudpickle
+# assert cloudpickle.__version__ >= "1.4.0", "Update the cloudpickle library using `%pip install --upgrade cloudpickle`"
 
 # COMMAND ----------
 
@@ -42,6 +42,20 @@ assert cloudpickle.__version__ >= "1.4.0", "Update the cloudpickle library using
 # MAGIC 1. Create a new cell, then paste in the sample code. It will look similar to the code shown in the following cell. Make these changes:
 # MAGIC   - Pass `sep=';'` to `pd.read_csv`
 # MAGIC   - Change the variable names from `df1` and `df2` to `white_wine` and `red_wine`, as shown in the following cell.
+
+# COMMAND ----------
+
+# init DF based on uploaded files
+import pandas as pd
+
+white_wine = pd.read_csv("/dbfs/FileStore/shared_uploads/mikita_karcheuski@epam.com/winequality_red.csv", sep=';')
+red_wine = pd.read_csv("/dbfs/FileStore/shared_uploads/mikita_karcheuski@epam.com/winequality_white.csv", sep=';')
+
+# COMMAND ----------
+
+#check content of dataframes
+display(white_wine)
+display(red_wine)
 
 # COMMAND ----------
 
@@ -161,6 +175,14 @@ y_test = test.quality
 # MAGIC This task seems well suited to a random forest classifier, since the output is binary and there may be interactions between multiple variables.
 # MAGIC 
 # MAGIC The following code builds a simple classifier using scikit-learn. It uses MLflow to keep track of the model accuracy, and to save the model for later use.
+
+# COMMAND ----------
+
+# next step can failed because of
+# ModuleNotFoundError: No module named 'mlflow'
+# to fix this issue run next code:
+
+# %pip install mlflow
 
 # COMMAND ----------
 
@@ -295,6 +317,14 @@ print(f'AUC: {roc_auc_score(y_test, model.predict(X_test))}')
 
 # COMMAND ----------
 
+# ModuleNotFoundError: No module named 'hyperopt'
+# %pip install hyperopt
+
+# ModuleNotFoundError: No module named 'xgboost'
+# %pip install xgboost
+
+# COMMAND ----------
+
 from hyperopt import fmin, tpe, hp, SparkTrials, Trials, STATUS_OK
 from hyperopt.pyll import scope
 from math import exp
@@ -344,8 +374,7 @@ with mlflow.start_run(run_name='xgboost_models'):
     space=search_space, 
     algo=tpe.suggest, 
     max_evals=96,
-    trials=spark_trials, 
-    rstate=np.random.RandomState(123)
+    trials=spark_trials
   )
 
 # COMMAND ----------
@@ -447,6 +476,7 @@ spark_df.write.format("delta").save(table_path)
 import mlflow.pyfunc
 
 apply_model_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{model_name}/production")
+# apply_model_udf = mlflow.pyfunc.spark_udf(spark, f"models:/{model_name}/production", env_manager="conda")
 
 # COMMAND ----------
 
@@ -491,7 +521,8 @@ display(new_data)
 # COMMAND ----------
 
 import os
-os.environ["DATABRICKS_TOKEN"] = "<YOUR_TOKEN>"
+YOUR_TOKEN = "dapic58059413ca75f346c6a20b07be5872d-2"
+os.environ["DATABRICKS_TOKEN"] = YOUR_TOKEN
 
 # COMMAND ----------
 
@@ -504,16 +535,22 @@ os.environ["DATABRICKS_TOKEN"] = "<YOUR_TOKEN>"
 
 # COMMAND ----------
 
-# Replace with code snippet from the model serving page
+
 import os
 import requests
+import numpy as np
 import pandas as pd
+import json
 
-def score_model(dataset: pd.DataFrame):
-  url = 'https://<DATABRICKS_URL>/model/wine_quality/Production/invocations'
-  headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}'}
-  data_json = dataset.to_dict(orient='split')
-  response = requests.request(method='POST', headers=headers, url=url, json=data_json)
+def create_tf_serving_json(data):
+  return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
+
+def score_model(dataset):
+  url = 'https://adb-2518595164019425.5.azuredatabricks.net/model/wine_quality/3/invocations'
+  headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
+  ds_dict = dataset.to_dict(orient='split') if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
+  data_json = json.dumps(ds_dict, allow_nan=True)
+  response = requests.request(method='POST', headers=headers, url=url, data=data_json)
   if response.status_code != 200:
     raise Exception(f'Request failed with status {response.status_code}, {response.text}')
   return response.json()
