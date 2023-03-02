@@ -35,5 +35,4 @@
         - {'user_id': 1, 'recipient_id': 2, 'message': 'Hi again.'}
       - this message shown in the consumer tab
   - list all messages for a specific topic:
-    - kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic messages --from-begin
-ning
+    - kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic messages --from-beginning
