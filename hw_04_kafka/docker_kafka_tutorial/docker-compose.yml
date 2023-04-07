@@ -102,7 +102,7 @@ services:
     #   docker cp ksqldb:/usr/share/confluent-hub-components ./data/connect-jars
     volumes:
       - $PWD/data:/data
-      - D:\projects\Mentoring\data_mentoring\hw_04_kafka\docker_kafka_tutorial\ksql\ksql-clickstream-demo\demo\:/scripts
+      - $PWD/ksql/ksql-clickstream-demo/demo:/scripts
       - $PWD/ksql/ksql-clickstream-demo/demo/connect-config:/usr/share/java/null-smt
       - $PWD/confluent-hub-components/:/usr/share/confluent-hub-components
 

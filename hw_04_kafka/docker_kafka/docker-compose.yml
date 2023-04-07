@@ -3,14 +3,15 @@ version: '3'
 services:
   zooleeper:
     image: wurstmeister/zookeeper
-    container_name: zookeeper
+
+    container_name: zookeeper1
     ports:
-      - "2181:2181"
+      - "2183:2183"
   kafka:
     image: wurstmeister/kafka
-    container_name: kafka
+    container_name: kafka1
     ports:
-      - "9082:9082"
+      - "9083:9083"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: localhost
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2183
