@@ -27,14 +27,14 @@ spec:
     enabled: true
 ---
 apiVersion: platform.confluent.io/v1beta1
-kind: Connector
+kind: Connect
 metadata:
   name: connect
   namespace: confluent
 spec:
   replicas: 1
   image:
-    application: my-azure-connector:1.0.0
+    application: my-gcs-connector:latest
     init: confluentinc/cp-init-container-operator:6.1.0.0
   dependencies:
     kafka:
