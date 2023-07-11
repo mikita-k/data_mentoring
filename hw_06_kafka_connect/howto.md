@@ -111,9 +111,13 @@ bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe
 
 ## run Kafka Streams
 ```shell
-# start Producer and KafkaStreams Application
-bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/KafkaStreamsAndProducer
+# start kafka producer
+bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/Producer
 
-# start Consumer Application
-bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/Consumer
+# start kafka stream
+bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/StreamProcessor
+
+# start kafka consumer
+bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/Consumer
+
 ```

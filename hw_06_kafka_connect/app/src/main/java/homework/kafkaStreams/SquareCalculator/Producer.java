@@ -1,7 +1,6 @@
 package homework.kafkaStreams.SquareCalculator;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.IntegerSerializer;
@@ -17,7 +16,7 @@ import org.apache.kafka.streams.kstream.Produced;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class KafkaStreamsAndProducer {
+public class Producer {
     public static void main(String[] args) {
         // Create the Kafka producer
         Properties producerConfig = new Properties();
@@ -25,22 +24,7 @@ public class KafkaStreamsAndProducer {
         producerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);
 
-        Producer<String, Integer> producer = new KafkaProducer<>(producerConfig);
-
-        // Create the Kafka Streams application
-        Properties streamsConfig = new Properties();
-        streamsConfig.put(StreamsConfig.APPLICATION_ID_CONFIG, "calculator-application");
-        streamsConfig.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-
-        StreamsBuilder builder = new StreamsBuilder();
-        KStream<String, Integer> inputStream = builder.stream("input-topic", Consumed.with(Serdes.String(), Serdes.Integer()));
-
-        KStream<String, Integer> squaredStream = inputStream.mapValues(num -> num * num);
-
-        squaredStream.to("output-topic", Produced.with(Serdes.String(), Serdes.Integer()));
-
-        KafkaStreams streams = new KafkaStreams(builder.build(), streamsConfig);
-        streams.start();
+        org.apache.kafka.clients.producer.Producer<String, Integer> producer = new KafkaProducer<>(producerConfig);
 
         // Read input numbers from the user and send them to Kafka topic
         Scanner scanner = new Scanner(System.in);
@@ -54,6 +38,5 @@ public class KafkaStreamsAndProducer {
         }
 
         producer.close();
-        streams.close();
     }
 }
