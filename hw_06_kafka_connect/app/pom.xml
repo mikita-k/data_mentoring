@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>homework-kafka-streams-calculate-the-squares</artifactId>
+    <artifactId>homework-kafka-streams</artifactId>
     <version>1.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
