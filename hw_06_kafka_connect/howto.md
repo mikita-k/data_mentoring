@@ -125,6 +125,15 @@ bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/Consumer
 
 # СТОП-ЛЕНЬ!
 
+0. start Kafka
+```shell
+- open 3 terminals
+   bin/zookeeper-server-start.sh config/zookeeper.properties 
+   bin/kafka-server-start.sh config/server.properties
+   <working terminal>
+```
+
+
 1. run connector: read JSON and send to _expedia_ topic
 ```shell
 # create topic 'expedia'
@@ -163,6 +172,9 @@ bin/kafka-run-class.sh homework/kafkaStreams/Aggregation/KafkaConsumerCheckTotal
 ```shell
 # delete topic
 bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic expedia
+
+# check topics
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 
 # очистить ресурсы
 rm -rf /tmp/kafka-logs /tmp/zookeeper /tmp/kraft-combined-logs
