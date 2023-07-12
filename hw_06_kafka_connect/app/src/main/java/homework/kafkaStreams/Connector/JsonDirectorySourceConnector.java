@@ -14,12 +14,17 @@ import java.util.Map;
 public class JsonDirectorySourceConnector extends SourceConnector {
 
     private String directory;
+    private String topic;
 
     @Override
     public void start(Map<String, String> props) {
         directory = props.get("directory");
         if (directory == null || directory.isEmpty()) {
             throw new ConfigException("Missing required configuration 'directory'");
+        }
+        topic = props.get("topic");
+        if (topic == null || topic.isEmpty()) {
+            throw new ConfigException("Missing required configuration 'topic'");
         }
     }
 
@@ -34,6 +39,7 @@ public class JsonDirectorySourceConnector extends SourceConnector {
         for (int i = 0; i < maxTasks; i++) {
             Map<String, String> config = new HashMap<>();
             config.put("directory", directory);
+            config.put("topic", topic);
             configs.add(config);
         }
         return configs;
@@ -47,7 +53,8 @@ public class JsonDirectorySourceConnector extends SourceConnector {
     @Override
     public ConfigDef config() {
         return new ConfigDef()
-                .define("directory", ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Directory path");
+                .define("directory", ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Directory path")
+                .define("topic", ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Topic name");
     }
 
     @Override

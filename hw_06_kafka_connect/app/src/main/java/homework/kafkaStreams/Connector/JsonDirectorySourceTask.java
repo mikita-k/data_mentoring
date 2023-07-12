@@ -16,8 +16,8 @@ import java.util.HashSet;
 public class JsonDirectorySourceTask extends SourceTask {
 
     private String directory;
+    private String topic;
     private Set<String> processedFiles;
-    private String topic = "expedia";
 
     @Override
     public String version() {
@@ -27,6 +27,7 @@ public class JsonDirectorySourceTask extends SourceTask {
     @Override
     public void start(Map<String, String> props) {
         directory = props.get("directory");
+        topic = props.get("topic");
         processedFiles = new HashSet<>();
     }
 
