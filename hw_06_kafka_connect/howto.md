@@ -107,6 +107,7 @@ bin/kafka-topics.sh --create \
 
 # verify the topics
 bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 ```
 
 ## run Kafka Streams
@@ -120,4 +121,49 @@ bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/StreamProcess
 # start kafka consumer
 bin/kafka-run-class.sh homework/kafkaStreams/SquareCalculator/test/Consumer
 
+```
+
+# СТОП-ЛЕНЬ!
+
+1. run connector: read JSON and send to _expedia_ topic
+```shell
+# create topic 'expedia'
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic expedia
+
+# check topic content
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic expedia --from-beginning
+
+# run connector
+bin/connect-standalone.sh config/connect-standalone.properties /home/mentee/homework/hw_06/json-directory-source.properties
+```
+
+2. run kafka stream, calculate duration and send to _expedia-duration_ topic
+```shell
+# create topic 'expedia-duration'
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic expedia-duration
+
+# check topic content
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic expedia-duration --from-beginning
+
+# run kafka stream for calculate duration
+bin/kafka-run-class.sh homework/kafkaStreams/KafkaStream/KafkaStreamDuration
+
+# NB! Нужно закинуть в общий котёл кафки ещё и либу json-20230618 !
+```
+
+3. check result calculating!
+```shell
+# Show total amount of hotels (hotel_id) and number of distinct hotels (hotel_id) for each category.
+
+# запустить расчёт всех отелей по категориям гостевания
+bin/kafka-run-class.sh homework/kafkaStreams/Aggregation/KafkaConsumerCheckTotal
+```
+
+4. utils
+```shell
+# delete topic
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic expedia
+
+# очистить ресурсы
+rm -rf /tmp/kafka-logs /tmp/zookeeper /tmp/kraft-combined-logs
 ```
