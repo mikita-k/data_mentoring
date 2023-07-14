@@ -166,6 +166,9 @@ bin/kafka-run-class.sh homework/kafkaStreams/KafkaStream/KafkaStreamDuration
 
 # запустить расчёт всех отелей по категориям гостевания
 bin/kafka-run-class.sh homework/kafkaStreams/Aggregation/KafkaConsumerCheckTotal
+
+# запустить нормальный расчёт отелей по категориям гостевания
+bin/kafka-run-class.sh homework/kafkaStreams/Aggregation/KafkaConsumerKTable
 ```
 
 4. utils
